@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive HR Attrition & Retention Dashboard</title>
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans antialiased">
+
+    <!-- Header -->
+    <header class="bg-indigo-900 text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold">Predictive Attrition & Retention Strategy Dashboard</h1>
+            <span class="bg-indigo-700 text-indigo-100 text-xs px-3 py-1 rounded-full font-medium">Live Simulation Model (N=50)</span>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        
+        <!-- TOP SECTION: KPIs -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <p class="text-sm font-medium text-gray-500">Total Workforce</p>
+                <h3 id="kpiTotal" class="text-3xl font-bold text-gray-900 mt-1">50</h3>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <p class="text-sm font-medium text-gray-500">Baseline Attrition Risk</p>
+                <h3 id="kpiBaseline" class="text-3xl font-bold text-red-600 mt-1">--</h3>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <p class="text-sm font-medium text-gray-500">Simulated Post-Strategy Risk</p>
+                <h3 id="kpiSimulated" class="text-3xl font-bold text-emerald-600 mt-1">--</h3>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <p class="text-sm font-medium text-gray-500">Turnover Reduction</p>
+                <h3 id="kpiImprovement" class="text-3xl font-bold text-indigo-600 mt-1">--</h3>
+            </div>
+        </div>
+
+        <!-- CONTROL PANEL & CHART SECTION -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            
+            <!-- Strategy Adjusters (Controls) -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-1">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Retention Strategy Levers</h3>
+                <p class="text-xs text-gray-500 mb-6">Adjust the sliders to simulate organization-wide improvements and watch the predicted attrition drop in real time.</p>
+                
+                <div class="space-y-5">
+                    <div>
+                        <div class="flex justify-between text-sm font-medium mb-1">
+                            <span>Compensation & Rewards</span>
+                            <span id="valComp" class="text-indigo-600 font-bold">+0 pts</span>
+                        </div>
+                        <input id="sliderComp" type="range" min="0" max="5" value="0" class="w-full accent-indigo-600 cursor-pointer" oninput="updateSimulation()">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-sm font-medium mb-1">
+                            <span>Career & Growth</span>
+                            <span id="valCareer" class="text-indigo-600 font-bold">+0 pts</span>
+                        </div>
+                        <input id="sliderCareer" type="range" min="0" max="5" value="0" class="w-full accent-indigo-600 cursor-pointer" oninput="updateSimulation()">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-sm font-medium mb-1">
+                            <span>Manager Quality</span>
+                            <span id="valManager" class="text-indigo-600 font-bold">+0 pts</span>
+                        </div>
+                        <input id="sliderManager" type="range" min="0" max="5" value="0" class="w-full accent-indigo-600 cursor-pointer" oninput="updateSimulation()">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-sm font-medium mb-1">
+                            <span>Work Design (WLB)</span>
+                            <span id="valWork" class="text-indigo-600 font-bold">+0 pts</span>
+                        </div>
+                        <input id="sliderWork" type="range" min="0" max="5" value="0" class="w-full accent-indigo-600 cursor-pointer" oninput="updateSimulation()">
+                    </div>
+                </div>
+
+                <button onclick="resetSliders()" class="w-full mt-6 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 rounded-lg text-sm transition">Reset Strategies</button>
+            </div>
+
+            <!-- Visualization Chart -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-2 flex flex-col justify-center">
+                <h3 class="text-lg font-bold text-gray-900 mb-2">Impact Analysis: Baseline vs. Simulated Attrition</h3>
+                <div class="relative h-72">
+                    <canvas id="attritionChart"></canvas>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- EMPLOYEE TABLE SECTION -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-gray-900">Employee Attrition Risk & Interventions (N=50)</h3>
+                <span class="text-xs text-gray-500">Sorted by highest baseline risk</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                            <th class="py-3 px-6">ID & Role</th>
+                            <th class="py-3 px-6">Primary Vulnerability</th>
+                            <th class="py-3 px-6">Baseline Risk</th>
+                            <th class="py-3 px-6">Simulated Risk</th>
+                            <th class="py-3 px-6">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employeeTableBody" class="divide-y divide-gray-100 text-sm">
+                        <!-- Populated via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Dashboard Logic Script -->
+    <script>
+        // Generate Mock Data for 50 Employees
+        const roles = ["Software Engineer", "HR Specialist", "Marketing Analyst", "Operations Lead", "Financial Controller", "Sales Executive"];
+        let employees = [];
+
+        function generateData() {
+            employees = [];
+            for (let i = 1; i <= 50; i++) {
+                let comp = Math.floor(Math.random() * 8) + 1;       // 1-8
+                let career = Math.floor(Math.random() * 8) + 1;     // 1-8
+                let manager = Math.floor(Math.random() * 8) + 1;    // 1-8
+                let work = Math.floor(Math.random() * 8) + 1;       // 1-8
+
+                // Determine primary vulnerability pillar
+                let scores = { "Compensation": comp, "Career Growth": career, "Manager Quality": manager, "Work Design": work };
+                let lowestPillar = Object.keys(scores).reduce((a, b) => scores[a] < scores[b] ? a : b);
+
+                // Baseline risk score formula
+                let baseRiskScore = Math.max(10, Math.min(95, Math.round((10 - comp) * 3 + (10 - career) * 2.5 + (10 - manager) * 3 + (10 - work) * 1.5 + Math.random() * 10)));
+
+                employees.push({
+                    id: `EMP-${1000 + i}`,
+                    role: roles[Math.floor(Math.random() * roles.length)],
+                    comp, career, manager, work,
+                    vulnerability: lowestPillar,
+                    baseRisk: baseRiskScore
+                });
+            }
+            // Sort by highest risk first
+            employees.sort((a, b) => b.baseRisk - a.baseRisk);
+        }
+
+        generateData();
+
+        // Initialize Chart.js
+        const ctx = document.getElementById('attritionChart').getContext('2d');
+        const attritionChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['High Risk (At Risk)', 'Stable / Low Risk'],
+                datasets: [{
+                    label: 'Employee Count',
+                    data: [0, 0],
+                    backgroundColor: ['#ef4444', '#10b981'],
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true, max: 50 }
+                }
+            }
+        });
+
+        function updateSimulation() {
+            const boostComp = parseInt(document.getElementById('sliderComp').value);
+            const boostCareer = parseInt(document.getElementById('sliderCareer').value);
+            const boostManager = parseInt(document.getElementById('sliderManager').value);
+            const boostWork = parseInt(document.getElementById('sliderWork').value);
+
+            // Update slider text labels
+            document.getElementById('valComp').innerText = `+${boostComp} pts`;
+            document.getElementById('valCareer').innerText = `+${boostCareer} pts`;
+            document.getElementById('valManager').innerText = `+${boostManager} pts`;
+            document.getElementById('valWork').innerText = `+${boostWork} pts`;
+
+            let baselineHighRiskCount = 0;
+            let simulatedHighRiskCount = 0;
+            let tableHTML = '';
+
+            employees.forEach(emp => {
+                // Calculate simulated risk reduction based on boosts matching their vulnerability or general improvement
+                let mitigation = 0;
+                if (emp.vulnerability === "Compensation") mitigation += boostComp * 4;
+                if (emp.vulnerability === "Career Growth") mitigation += boostCareer * 4;
+                if (emp.vulnerability === "Manager Quality") mitigation += boostManager * 4;
+                if (emp.vulnerability === "Work Design") mitigation += boostWork * 4;
+                
+                // General spillover mitigation from other boosts
+                mitigation += (boostComp + boostCareer + boostManager + boostWork) * 1.5;
+
+                let simulatedRisk = Math.max(5, Math.round(emp.baseRisk - mitigation));
+
+                let isBaselineHigh = emp.baseRisk >= 50;
+                let isSimulatedHigh = simulatedRisk >= 50;
+
+                if (isBaselineHigh) baselineHighRiskCount++;
+                if (isSimulatedHigh) simulatedHighRiskCount++;
+
+                // Table row coloring and status
+                let statusBadge = isSimulatedHigh 
+                    ? '<span class="bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-xs font-semibold">At Risk</span>' 
+                    : '<span class="bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-full text-xs font-semibold">Retained</span>';
+
+                tableHTML += `
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="py-3 px-6 font-medium text-gray-900">${emp.id}<br><span class="text-xs font-normal text-gray-500">${emp.role}</span></td>
+                        <td class="py-3 px-6"><span class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded text-xs font-medium">${emp.vulnerability}</span></td>
+                        <td class="py-3 px-6 font-semibold text-red-600">${emp.baseRisk}%</td>
+                        <td class="py-3 px-6 font-semibold text-emerald-600">${simulatedRisk}%</td>
+                        <td class="py-3 px-6">${statusBadge}</td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('employeeTableBody').innerHTML = tableHTML;
+
+            // Update KPIs
+            let baselineRate = ((baselineHighRiskCount / 50) * 100).toFixed(1) + '%';
+            let simulatedRate = ((simulatedHighRiskCount / 50) * 100).toFixed(1) + '%';
+            let improvementPct = (((baselineHighRiskCount - simulatedHighRiskCount) / (baselineHighRiskCount || 1)) * 100).toFixed(1) + '%';
+
+            document.getElementById('kpiBaseline').innerText = baselineRate;
+            document.getElementById('kpiSimulated').innerText = simulatedRate;
+            document.getElementById('kpiImprovement').innerText = improvementPct;
+
+            // Update Chart
+            attritionChart.data.datasets[0].data = [simulatedHighRiskCount, 50 - simulatedHighRiskCount];
+            attritionChart.update();
+        }
+
+        function resetSliders() {
+            document.getElementById('sliderComp').value = 0;
+            document.getElementById('sliderCareer').value = 0;
+            document.getElementById('sliderManager').value = 0;
+            document.getElementById('sliderWork').value = 0;
+            updateSimulation();
+        }
+
+        // Run initial load calculation
+        updateSimulation();
+    </script>
+</body>
+</html>
