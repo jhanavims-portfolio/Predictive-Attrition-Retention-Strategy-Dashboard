@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Retention Intelligence — Explainable Flight-Risk Platform | M.S. Jhanavi</title>
+<meta name="description" content="Interactive people-analytics demo: explainable flight-risk scores, what-if sliders, retention ROI and a fairness audit. Synthetic data, runs in your browser.">
+<meta property="og:title" content="Retention Intelligence: explainable flight-risk platform">
+<style>
+  :root{
+    --bg:#eef2ff;
+    --surface:#ffffff;
+    --surface-2:#f3f6ff;
+    --surface-3:#e4eaff;
+    --border:#dbe3fb;
+    --text:#1b2447;
+    --heading:#0f1a3f;
+    --text-dim:#5a6587;
+    --text-faint:#8a93b3;
+    --risk-high:#ec4755;
+    --risk-mid:#f5a31a;
+    --risk-low:#14b27a;
+    --high-ink:#b3212f;
+    --low-ink:#0b7a52;
+    --accent:#2f5bff;
+    --accent-2:#7a3dff;
+    --accent-ink:#2246d8;
+    --orange:#ff8a3d;
+    --shadow:0 10px 30px rgba(47,91,255,0.10);
+    --serif: Georgia, "Iowan Old Style", "Times New Roman", serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--sans);}
+  body{background:radial-gradient(1200px 500px at 85% -10%,rgba(122,61,255,0.14),transparent 60%),radial-gradient(1000px 500px at -10% 0%,rgba(47,91,255,0.16),transparent 60%),var(--bg);background-repeat:no-repeat;}
+  body{padding:20px;min-height:100vh;}
+  a{color:inherit;}
+
+  .wrap{max-width:1440px;margin:0 auto;}
+
+  /* ---------- Header ---------- */
+  header.top{
+    display:flex;justify-content:space-between;align-items:flex-end;gap:24px;
+    flex-wrap:wrap;margin-bottom:18px;padding:26px 28px;border-radius:18px;
+    background:linear-gradient(120deg,#1738f2 0%,#3f4dff 45%,#7a3dff 100%);
+    box-shadow:0 18px 40px rgba(47,91,255,0.28);position:relative;overflow:hidden;
+  }
+  header.top::after{content:"";position:absolute;right:-80px;top:-80px;width:280px;height:280px;border-radius:50%;
+    background:radial-gradient(circle,rgba(255,255,255,0.22),transparent 65%);pointer-events:none;}
+  .brand h1{
+    font-family:var(--serif);font-weight:400;font-size:30px;letter-spacing:0.2px;margin:0 0 6px 0;color:#fff;
+  }
+  .brand p{margin:0;color:rgba(255,255,255,0.88);font-size:13.5px;max-width:520px;line-height:1.55;}
+  .brand .tag{
+    display:inline-block;margin-top:10px;font-size:11.5px;color:#fff;
+    border:1px solid rgba(255,255,255,0.45);background:rgba(255,255,255,0.16);
+    padding:4px 12px;border-radius:999px;
+  }
+
+  .kpis{display:flex;gap:10px;flex-wrap:wrap;}
+  .kpi{
+    background:#fff;border:1px solid rgba(255,255,255,0.7);border-radius:12px;
+    padding:12px 16px;min-width:132px;box-shadow:0 8px 20px rgba(15,26,63,0.18);position:relative;z-index:1;
+  }
+  .kpi .num{font-family:var(--serif);font-size:22px;color:var(--heading);line-height:1.1;}
+  .kpi .num small{font-size:12px;color:var(--text-dim);font-family:var(--sans);}
+  .kpi .label{font-size:11px;color:var(--text-dim);margin-top:3px;}
+  .kpi.warn .num{color:var(--high-ink);}
+  .kpi.good .num{color:var(--low-ink);}
+
+  .controls-row{display:flex;justify-content:flex-end;gap:8px;margin:12px 0 16px;}
+  button{
+    font-family:var(--sans);font-size:12.5px;background:var(--surface-2);color:var(--text);
+    border:1px solid var(--border);padding:8px 16px;border-radius:999px;cursor:pointer;transition:transform .12s,box-shadow .12s,background .12s;
+  }
+  button:hover{background:var(--surface-3);}
+  button.primary{background:linear-gradient(120deg,var(--accent),var(--accent-2));border-color:transparent;color:#fff;font-weight:600;box-shadow:0 6px 16px rgba(47,91,255,0.30);}
+  button.primary:hover{filter:brightness(1.06);transform:translateY(-1px);background:linear-gradient(120deg,var(--accent),var(--accent-2));}
+  button.ghost{background:#fff;color:var(--accent-ink);border-color:var(--border);}
+  button.ghost:hover{background:var(--surface-2);}
+  #btn-demo{background:linear-gradient(120deg,#ff8a3d,#ff5e62);box-shadow:0 6px 16px rgba(255,94,98,0.30);}
+  #btn-demo:hover{background:linear-gradient(120deg,#ff8a3d,#ff5e62);}
+
+  /* ---------- Layout ---------- */
+  .grid{display:grid;grid-template-columns:300px 1fr 320px;gap:16px;align-items:start;}
+  @media (max-width:1180px){ .grid{grid-template-columns:1fr;} }
+
+  .panel{
+    background:var(--surface);border:1px solid var(--border);border-radius:16px;
+    padding:18px;box-shadow:var(--shadow);
+  }
+  .panel h2{
+    font-family:var(--serif);font-weight:400;font-size:16px;color:var(--heading);margin:0 0 12px 0;
+  }
+  .panel h3{
+    font-size:11px;text-transform:none;color:var(--text-dim);margin:16px 0 8px 0;letter-spacing:0.2px;
+  }
+  .panel h3:first-child{margin-top:0;}
+
+  /* ---------- Roster ---------- */
+  #roster-search{
+    width:100%;padding:8px 10px;background:var(--surface-2);border:1px solid var(--border);
+    border-radius:5px;color:var(--text);font-size:13px;margin-bottom:10px;
+  }
+  #roster-search::placeholder{color:var(--text-faint);}
+  .roster-meta{font-size:11.5px;color:var(--text-dim);margin-bottom:8px;display:flex;justify-content:space-between;}
+  .roster-list{max-height:640px;overflow-y:auto;border-top:1px solid var(--border);}
+  .roster-row{
+    display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--border);
+    cursor:pointer;
+  }
+  .roster-row:hover{background:var(--surface-2);}
+  .roster-row.active{background:var(--surface-3);box-shadow:inset 3px 0 0 var(--accent);}
+  .dot{width:9px;height:9px;border-radius:50%;flex:none;}
+  .roster-row .who{flex:1;min-width:0;}
+  .roster-row .who .name{font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .roster-row .who .meta{font-size:11px;color:var(--text-dim);}
+  .roster-row .score{font-family:var(--serif);font-size:15px;width:30px;text-align:right;}
+
+  /* ---------- Employee detail ---------- */
+  .emp-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:6px;}
+  .emp-name{font-family:var(--serif);font-size:20px;color:var(--heading);}
+  .emp-sub{font-size:12.5px;color:var(--text-dim);margin-top:3px;}
+
+  .gauge-block{display:flex;align-items:center;gap:18px;margin:14px 0 18px;}
+  .gauge{
+    width:104px;height:104px;border-radius:50%;position:relative;flex:none;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .gauge::before{
+    content:"";position:absolute;inset:10px;border-radius:50%;background:var(--surface);
+  }
+  .gauge .val{position:relative;font-family:var(--serif);font-size:26px;color:var(--heading);}
+  .gauge .sub{position:relative;font-size:9px;color:var(--text-dim);margin-top:-2px;}
+  .gauge-caption{}
+  .risk-band{display:inline-block;font-size:12px;padding:3px 11px;border-radius:999px;font-weight:700;}
+  .gauge-caption p{margin:6px 0 0;font-size:12.5px;color:var(--text-dim);line-height:1.5;max-width:280px;}
+
+  .factor-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 22px;}
+  @media (max-width:720px){.factor-grid{grid-template-columns:1fr;}}
+  .factor{}
+  .factor label{
+    display:flex;justify-content:space-between;font-size:12px;color:var(--text-dim);margin-bottom:4px;
+  }
+  .factor label .fval{color:var(--text);font-weight:600;}
+  input[type=range]{
+    width:100%;accent-color:var(--accent);height:4px;background:var(--surface-2);
+  }
+  .reset-row{margin-top:14px;display:flex;gap:8px;}
+
+  .contrib-list{display:flex;flex-direction:column;gap:7px;}
+  .contrib-item{display:flex;align-items:center;gap:10px;}
+  .contrib-item .clabel{width:150px;flex:none;font-size:12px;color:var(--text-dim);}
+  .contrib-bar-track{flex:1;height:7px;background:var(--surface-2);border-radius:4px;overflow:hidden;}
+  .contrib-bar{height:100%;border-radius:4px;}
+  .contrib-item .cval{width:34px;flex:none;text-align:right;font-size:12px;color:var(--text-dim);}
+
+  .rec-list{display:flex;flex-direction:column;gap:10px;}
+  .rec-item{
+    border:1px solid var(--border);border-left:3px solid var(--accent);background:var(--surface-2);
+    border-radius:8px;padding:10px 12px;
+  }
+  .rec-item .rtitle{font-size:13px;color:var(--heading);font-weight:600;margin-bottom:3px;}
+  .rec-item .rmeta{font-size:11.5px;color:var(--text-dim);line-height:1.5;}
+  .rec-item .rmeta b{color:var(--low-ink);}
+
+  /* ---------- Right column ---------- */
+  .roi-line{display:flex;justify-content:space-between;font-size:12.5px;padding:6px 0;border-bottom:1px solid var(--border);}
+  .roi-line:last-child{border-bottom:none;}
+  .roi-line .l{color:var(--text-dim);}
+  .roi-line .v{color:var(--heading);font-family:var(--serif);font-size:14px;}
+  .roi-verdict{
+    margin-top:10px;padding:9px 11px;border-radius:5px;font-size:12px;line-height:1.5;
+  }
+  .roi-verdict.good{background:rgba(20,178,122,0.10);color:var(--low-ink);border:1px solid rgba(20,178,122,0.35);}
+  .roi-verdict.neutral{background:rgba(47,91,255,0.07);color:var(--accent-ink);border:1px solid rgba(47,91,255,0.28);}
+
+  .bias-group{margin-bottom:14px;}
+  .bias-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+  .bias-row .glabel{width:78px;flex:none;font-size:11.5px;color:var(--text-dim);}
+  .bias-track{flex:1;height:6px;background:var(--surface-2);border-radius:3px;position:relative;}
+  .bias-fill{height:100%;border-radius:3px;background:var(--accent);}
+  .bias-row .gval{width:34px;flex:none;text-align:right;font-size:11px;color:var(--text-dim);}
+  .flag{
+    margin-top:6px;font-size:11.5px;padding:7px 9px;border-radius:4px;line-height:1.5;
+  }
+  .flag.alert{background:rgba(236,71,85,0.08);color:var(--high-ink);border:1px solid rgba(236,71,85,0.35);}
+  .flag.clear{background:rgba(20,178,122,0.08);color:var(--low-ink);border:1px solid rgba(20,178,122,0.3);}
+
+  .footnote{margin-top:20px;font-size:11px;color:var(--text-faint);line-height:1.6;border-top:1px solid var(--border);padding-top:12px;}
+
+  /* ---------- Recruiter upgrades ---------- */
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  .tour{display:flex;align-items:center;gap:18px;flex-wrap:wrap;background:linear-gradient(90deg,rgba(47,91,255,0.12),rgba(122,61,255,0.06));
+    border:1px solid rgba(47,91,255,0.28);border-radius:16px;padding:16px 18px;margin:0 0 16px;box-shadow:var(--shadow);}
+  .tour-title{font-family:var(--serif);font-size:17px;color:var(--heading);flex:none;}
+  .tour-steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;flex:1;min-width:280px;}
+  .tour-steps li{font-size:12px;color:var(--text-dim);line-height:1.45;}
+  .tour-steps li b{display:inline-block;width:18px;height:18px;line-height:18px;text-align:center;border-radius:50%;background:linear-gradient(120deg,var(--accent),var(--accent-2));color:#fff;font-size:11px;margin-right:6px;}
+  @media (max-width:900px){.tour-steps{grid-template-columns:1fr 1fr;}}
+  @media (max-width:560px){.tour-steps{grid-template-columns:1fr;}}
+  .dept-panel{margin-bottom:16px;}
+  .dept-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px 22px;}
+  .dept-row{display:flex;align-items:center;gap:8px;cursor:pointer;padding:3px 4px;border-radius:4px;}
+  .dept-row:hover{background:var(--surface-2);}
+  .dept-row .dn{width:112px;flex:none;font-size:12px;color:var(--text-dim);}
+  .dept-row .dv{width:60px;flex:none;text-align:right;font-size:11.5px;color:var(--text);}
+  .sim-banner{margin:-6px 0 16px;padding:10px 12px;border-radius:5px;font-size:12.5px;line-height:1.5;
+    background:rgba(20,178,122,0.10);color:var(--low-ink);border:1px solid rgba(20,178,122,0.35);}
+  .sim-banner.flat{background:rgba(47,91,255,0.07);color:var(--accent-ink);border-color:rgba(47,91,255,0.28);}
+  .sim-banner small{display:block;color:var(--text-dim);margin-top:3px;}
+  .author{margin-top:14px;font-size:12px;color:var(--text-dim);line-height:1.7;}
+  .author b{color:var(--heading);font-family:var(--serif);font-weight:400;font-size:14px;}
+  .author a{color:var(--accent-ink);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <h1>Retention Intelligence</h1>
+      <p>An explainable, bias-audited alternative to black-box flight-risk scoring — built to show the reasoning behind every number, not just the number.</p>
+      <span class="tag">Synthetic demo workforce · runs entirely in your browser</span>
+    </div>
+    <div class="kpis" id="kpis"></div>
+  </header>
+
+  <section class="tour" aria-label="How to explore this demo">
+    <div class="tour-title">30-second tour</div>
+    <ol class="tour-steps">
+      <li><b>1</b>Pick someone from the roster. The highest-risk people are on top.</li>
+      <li><b>2</b>Drag the sliders and watch the score and cost change live.</li>
+      <li><b>3</b>Press “Apply recommended actions” to see the before and after.</li>
+      <li><b>4</b>Check the fairness audit on the right for pay and risk gaps.</li>
+    </ol>
+    <button class="primary" id="btn-demo">▶ Show me the highest-risk employee</button>
+  </section>
+
+  <div class="panel dept-panel">
+    <h2>Risk by department <span style="font-size:11.5px;color:var(--text-dim);font-family:var(--sans);">average score · people at high risk · click to filter the roster</span></h2>
+    <div class="dept-grid" id="dept-grid"></div>
+  </div>
+
+  <div class="controls-row">
+    <button class="ghost" id="btn-regenerate">Regenerate workforce</button>
+  </div>
+
+  <div class="grid">
+
+    <!-- ROSTER -->
+    <div class="panel">
+      <h2>Workforce roster</h2>
+      <input id="roster-search" type="text" placeholder="Search name or department…">
+      <div class="roster-meta">
+        <span id="roster-count">— employees</span>
+        <span id="roster-sort-toggle" style="cursor:pointer;color:var(--accent-ink);font-weight:600;">sort: risk ↓</span>
+      </div>
+      <div class="roster-list" id="roster-list"></div>
+    </div>
+
+    <!-- EMPLOYEE DETAIL -->
+    <div class="panel" id="detail-panel">
+      <!-- filled by JS -->
+    </div>
+
+    <!-- ROI + BIAS -->
+    <div class="panel">
+      <h2>What it would take</h2>
+      <div id="roi-block"></div>
+
+      <h2 style="margin-top:22px;">Fairness audit</h2>
+      <p style="font-size:11.5px;color:var(--text-dim);margin:-6px 0 12px;line-height:1.5;">
+        Checks whether risk scores and pay gaps cluster by gender or age. The demo data includes a small pay gap on purpose, so the audit has something real to catch.
+      </p>
+      <div id="bias-block"></div>
+    </div>
+
+  </div>
+
+  <div class="footnote">
+    All employees, scores and salaries on this page are synthetically generated for demonstration purposes and do not represent a real company or real people. The scoring model is a transparent, weighted, rule-based model built on commonly cited attrition drivers (compensation, engagement, work-life balance, manager relationship, promotion velocity, recognition, workload, team-level attrition and onboarding stage). It is not trained on real data, so the scores illustrate explainable people-analytics design and are not predictions. Replacement cost is assumed at 1.4x salary, and intervention costs are rough estimates.
+  </div>
+
+  <div class="author">
+    <b>Built by M.S. Jhanavi</b> · MBA (HR), KL Business School · People analytics portfolio<br>
+    <a href="https://www.linkedin.com/in/jhanavi-ms-81591233a">LinkedIn</a> · <a href="mailto:2501510027@kluniversity.in">2501510027@kluniversity.in</a>
+  </div>
+
+</div>
+
+<script>
+(function(){
+
+  /* ============================================================
+     0. SEEDED RNG
+  ============================================================ */
+  function mulberry32(a){
+    return function(){
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      let t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  let SEED = 918273645;
+  let rng = mulberry32(SEED);
+  const rand = (min,max)=> min + (max-min)*rng();
+  const randInt = (min,max)=> Math.floor(rand(min,max+1));
+  const pick = (arr)=> arr[Math.floor(rng()*arr.length)];
+  const clamp = (v,lo,hi)=> Math.max(lo,Math.min(hi,v));
+
+  /* ============================================================
+     1. WORKFORCE GENERATION
+  ============================================================ */
+  const FIRST = ["Aiden","Maria","Wei","Fatima","Liam","Priya","Noah","Chen","Sofia","Omar",
+    "Grace","Kenji","Elena","Marcus","Aisha","Lucas","Nadia","Ethan","Yuki","Carla",
+    "Daniel","Zara","Ravi","Ingrid","Tomás","Mei","Samuel","Layla","Victor","Anya",
+    "Isaac","Camila","Hassan","Freya","Dmitri","Amara","Felix","Nia","Arjun","Sasha"];
+  const LAST = ["Nakamura","Garcia","Okafor","Petrov","Singh","Müller","Costa","Kim","Haddad","Novak",
+    "Rossi","Andersson","Lindqvist","Silva","Osei","Tanaka","Ferreira","Kowalski","Reyes","Baptiste",
+    "Fischer","Nguyen","Adeyemi","Moreno","Kaur","Ibrahim","Larsen","Botha","Choudhury","Weiss"];
+
+  const DEPARTMENTS = [
+    { name:"Engineering", baseAttrition:0.12, baseOT:6, baseWLB:3.4, roles:[
+      { title:"Software Engineer", min:72000, mid:96000, max:128000, weight:0.65 },
+      { title:"Senior Engineer",   min:104000, mid:132000, max:168000, weight:0.35 } ]},
+    { name:"Sales", baseAttrition:0.24, baseOT:9, baseWLB:2.7, roles:[
+      { title:"Account Executive", min:52000, mid:78000, max:104000, weight:0.7 },
+      { title:"Sales Manager",     min:88000, mid:118000, max:150000, weight:0.3 } ]},
+    { name:"Customer Support", baseAttrition:0.27, baseOT:5, baseWLB:2.9, roles:[
+      { title:"Support Specialist", min:38000, mid:50000, max:64000, weight:0.75 },
+      { title:"Support Team Lead",  min:58000, mid:74000, max:92000, weight:0.25 } ]},
+    { name:"Operations", baseAttrition:0.15, baseOT:5, baseWLB:3.2, roles:[
+      { title:"Operations Analyst", min:50000, mid:66000, max:84000, weight:0.7 },
+      { title:"Operations Manager", min:78000, mid:104000, max:132000, weight:0.3 } ]},
+    { name:"Finance", baseAttrition:0.10, baseOT:4, baseWLB:3.6, roles:[
+      { title:"Financial Analyst", min:58000, mid:78000, max:98000, weight:0.7 },
+      { title:"Finance Manager",   min:92000, mid:122000, max:152000, weight:0.3 } ]},
+    { name:"Marketing", baseAttrition:0.16, baseOT:5, baseWLB:3.3, roles:[
+      { title:"Marketing Specialist", min:54000, mid:72000, max:92000, weight:0.7 },
+      { title:"Marketing Manager",    min:84000, mid:110000, max:138000, weight:0.3 } ]},
+    { name:"Human Resources", baseAttrition:0.11, baseOT:4, baseWLB:3.7, roles:[
+      { title:"HR Generalist",       min:52000, mid:68000, max:86000, weight:0.7 },
+      { title:"HR Business Partner", min:80000, mid:104000, max:130000, weight:0.3 } ]},
+  ];
+
+  const GENDERS = [
+    { key:"Female", w:0.47 }, { key:"Male", w:0.47 }, { key:"Non-binary", w:0.06 }
+  ];
+  function pickGender(){
+    const r = rng(); let acc=0;
+    for(const g of GENDERS){ acc+=g.w; if(r<=acc) return g.key; }
+    return "Male";
+  }
+
+  const FACTOR_WEIGHTS = {
+    comp:        0.20,
+    wlb:         0.15,
+    manager:     0.15,
+    engagement:  0.15,
+    recognition: 0.10,
+    promotion:   0.12,
+    overtime:    0.08,
+    peer:        0.08,
+    newHire:     0.07
+  };
+  const FACTOR_LABELS = {
+    comp:"Below-market pay", wlb:"Work-life balance", manager:"Manager relationship",
+    engagement:"Engagement score", recognition:"Recognition", promotion:"Time since promotion",
+    overtime:"Overtime load", peer:"Team-level attrition", newHire:"Onboarding stage"
+  };
+
+  function makeEmployee(id){
+    const dept = pick(DEPARTMENTS);
+    const roleRoll = rng();
+    const role = roleRoll < dept.roles[0].weight ? dept.roles[0] : (dept.roles[1] || dept.roles[0]);
+    const tenureYears = clamp(-Math.log(1-rng()*0.98)*2.6, 0.1, 22);
+    const age = clamp(21 + tenureYears*rand(0.6,1.4) + rand(0,10), 21, 64);
+    const gender = pickGender();
+
+    let salary = role.mid * rand(0.82,1.18);
+    // structural, unintentional pay gap baked in on purpose so the fairness audit has something real to catch
+    if(gender === "Female") salary *= 0.965;
+    salary = Math.round(salary/500)*500;
+
+    const wlbScore = clamp(dept.baseWLB + rand(-1.1,1.1), 1, 5);
+    const managerRel = clamp(rand(1.5,5) - (tenureYears>8? rand(0,0.6):0), 1, 5);
+    const recognition = clamp(rand(1.3,5), 1, 5);
+    const engagement = clamp((wlbScore+managerRel)/2 + rand(-0.8,0.8), 1, 5);
+    const monthsSincePromo = clamp(rand(1,60) * (tenureYears<1? 0.3:1), 0, 60);
+    const overtime = clamp(dept.baseOT + rand(-3,7), 0, 26);
+    const teamAttrition = clamp(dept.baseAttrition + rand(-0.06,0.09), 0.02, 0.5);
+    const residual = rand(-6,6); // idiosyncratic, unmodeled noise
+
+    return {
+      id, name: pick(FIRST)+" "+pick(LAST), gender, age: Math.round(age),
+      dept: dept.name, deptObj: dept, role: role.title, roleBand: role,
+      tenureYears: Math.round(tenureYears*10)/10, salary,
+      wlbScore: Math.round(wlbScore*10)/10, managerRel: Math.round(managerRel*10)/10,
+      recognition: Math.round(recognition*10)/10, engagement: Math.round(engagement*10)/10,
+      monthsSincePromo: Math.round(monthsSincePromo), overtime: Math.round(overtime*10)/10,
+      teamAttrition: Math.round(teamAttrition*100)/100, residual,
+      overrides: {} // live what-if edits, merged over base values
+    };
+  }
+
+  let EMPLOYEES = [];
+  function generateWorkforce(n){
+    EMPLOYEES = [];
+    for(let i=0;i<n;i++) EMPLOYEES.push(makeEmployee(i+1));
+  }
+
+  /* ============================================================
+     2. SCORING ENGINE (transparent, weighted, explainable)
+  ============================================================ */
+  function currentValues(emp){
+    const o = emp.overrides;
+    return {
+      salary: o.salary !== undefined ? o.salary : emp.salary,
+      wlbScore: o.wlbScore !== undefined ? o.wlbScore : emp.wlbScore,
+      managerRel: o.managerRel !== undefined ? o.managerRel : emp.managerRel,
+      recognition: o.recognition !== undefined ? o.recognition : emp.recognition,
+      engagement: o.engagement !== undefined ? o.engagement : emp.engagement,
+      monthsSincePromo: o.monthsSincePromo !== undefined ? o.monthsSincePromo : emp.monthsSincePromo,
+      overtime: o.overtime !== undefined ? o.overtime : emp.overtime,
+    };
+  }
+
+  function scoreEmployee(emp){
+    const v = currentValues(emp);
+    const compGapPct = ((v.salary - emp.roleBand.mid) / emp.roleBand.mid) * 100;
+
+    const badness = {
+      comp:        clamp(-compGapPct/18, 0, 1),
+      wlb:         (5 - v.wlbScore)/4,
+      manager:     (5 - v.managerRel)/4,
+      engagement:  (5 - v.engagement)/4,
+      recognition: (5 - v.recognition)/4,
+      promotion:   clamp(v.monthsSincePromo/48, 0, 1),
+      overtime:    clamp((v.overtime-5)/16, 0, 1),
+      peer:        clamp(emp.teamAttrition/0.35, 0, 1),
+      newHire:     emp.tenureYears < 1 ? (1-emp.tenureYears)*0.55 : 0
+    };
+
+    const contributions = {};
+    let linear = 0;
+    for(const k in FACTOR_WEIGHTS){
+      const pts = FACTOR_WEIGHTS[k] * badness[k] * 100;
+      contributions[k] = pts;
+      linear += pts;
+    }
+    let risk = clamp(linear + emp.residual, 2, 98);
+
+    return { risk: Math.round(risk), contributions, compGapPct, badness };
+  }
+
+  function riskColor(risk){
+    if(risk >= 70) return "var(--risk-high)";
+    if(risk >= 40) return "var(--risk-mid)";
+    return "var(--risk-low)";
+  }
+  function riskLabel(risk){
+    if(risk >= 70) return "High risk";
+    if(risk >= 40) return "Watch";
+    return "Stable";
+  }
+
+  /* ============================================================
+     3. RECOMMENDATION ENGINE
+  ============================================================ */
+  function recommendationsFor(emp, scored){
+    const v = currentValues(emp);
+    const items = [];
+    const c = scored.contributions;
+
+    if(c.comp > 4){
+      const targetGap = Math.max(scored.compGapPct, -4);
+      const raiseNeeded = Math.round(emp.roleBand.mid * (1 + targetGap/100) - v.salary);
+      items.push({
+        title: "Close the pay gap toward market band",
+        detail: `Currently ${Math.round(scored.compGapPct)}% ${scored.compGapPct<0?'below':'above'} the role's market midpoint ($${emp.roleBand.mid.toLocaleString()}). A raise of roughly $${Math.max(raiseNeeded,0).toLocaleString()} would bring this within a defensible range.`,
+        weight: c.comp
+      });
+    }
+    if(c.wlb > 3.5){
+      items.push({
+        title: "Rebalance workload or offer flexible arrangements",
+        detail: `Work-life balance is self-reported at ${v.wlbScore}/5, one of the larger drivers of this score. Flexible hours, remote days, or a workload review with the manager tend to move this fastest.`,
+        weight: c.wlb
+      });
+    }
+    if(c.manager > 3.5){
+      items.push({
+        title: "Open a manager relationship conversation",
+        detail: `Manager relationship is rated ${v.managerRel}/5. A structured 1:1 cadence or, if the pattern repeats across the team, manager coaching, is the standard next step.`,
+        weight: c.manager
+      });
+    }
+    if(c.promotion > 3.5){
+      items.push({
+        title: "Put a promotion or mobility path on the table",
+        detail: `${v.monthsSincePromo} months since the last promotion. Even a documented growth plan with a 6-month checkpoint measurably reduces flight risk at this stage.`,
+        weight: c.promotion
+      });
+    }
+    if(c.recognition > 3){
+      items.push({
+        title: "Increase recognition frequency",
+        detail: `Recognition is rated ${v.recognition}/5. Low-cost, high-frequency recognition (peer shout-outs, spot bonuses) is disproportionately effective here.`,
+        weight: c.recognition
+      });
+    }
+    if(c.overtime > 3){
+      items.push({
+        title: "Reduce sustained overtime",
+        detail: `Averaging ${v.overtime} hours of overtime weekly. Redistributing workload or backfilling a role protects against burnout-driven exits.`,
+        weight: c.overtime
+      });
+    }
+    if(c.peer > 3.5){
+      items.push({
+        title: "Address team-level attrition contagion",
+        detail: `This employee's team has lost ${Math.round(emp.teamAttrition*100)}% of headcount recently — attrition often clusters. A team-level retention review may matter more than an individual fix.`,
+        weight: c.peer
+      });
+    }
+    if(c.newHire > 3){
+      items.push({
+        title: "Strengthen onboarding support",
+        detail: `Under a year of tenure — the highest-churn window in most companies. A 30/60/90-day check-in plan with the manager reduces early exits.`,
+        weight: c.newHire
+      });
+    }
+
+    items.sort((a,b)=> b.weight - a.weight);
+    return items.slice(0,4);
+  }
+
+  /* ============================================================
+     4. RENDERING — ROSTER
+  ============================================================ */
+  let selectedId = null;
+  let sim = null; // result of "Apply recommended actions" for the selected employee
+  let sortDesc = true;
+  let searchTerm = "";
+
+  function renderKPIs(){
+    const scored = EMPLOYEES.map(e=>({e, s:scoreEmployee(e)}));
+    const high = scored.filter(x=>x.s.risk>=70).length;
+    const exposureAll = scored.reduce((sum,x)=> sum + x.e.salary*1.4*(x.s.risk/100), 0);
+    const exposureHigh = scored.filter(x=>x.s.risk>=70)
+      .reduce((sum,x)=> sum + x.e.salary*1.4*(x.s.risk/100), 0);
+
+    const fmtM = (v)=> "$"+(v/1000000).toFixed(2)+"M";
+
+    document.getElementById("kpis").innerHTML = `
+      <div class="kpi"><div class="num">${EMPLOYEES.length}</div><div class="label">Headcount</div></div>
+      <div class="kpi ${high>0?'warn':''}"><div class="num">${high}</div><div class="label">Employees at high risk (≥70)</div></div>
+      <div class="kpi warn"><div class="num">${fmtM(exposureAll)}</div><div class="label">Expected attrition cost exposure</div></div>
+      <div class="kpi good"><div class="num">${fmtM(exposureHigh)}</div><div class="label">Potentially protectable if top-risk group retained</div></div>
+    `;
+  }
+
+  function renderRoster(){
+    let list = EMPLOYEES.map(e=>({e, s:scoreEmployee(e)}));
+    if(searchTerm){
+      const t = searchTerm.toLowerCase();
+      list = list.filter(x=> x.e.name.toLowerCase().includes(t) || x.e.dept.toLowerCase().includes(t));
+    }
+    list.sort((a,b)=> sortDesc ? b.s.risk - a.s.risk : a.s.risk - b.s.risk);
+
+    document.getElementById("roster-count").textContent = list.length + " employees";
+    const html = list.map(x=>{
+      const active = x.e.id === selectedId ? "active" : "";
+      return `<div class="roster-row ${active}" data-id="${x.e.id}" tabindex="0" role="button">
+        <div class="dot" style="background:${riskColor(x.s.risk)}"></div>
+        <div class="who">
+          <div class="name">${x.e.name}</div>
+          <div class="meta">${x.e.dept} · ${x.e.role}</div>
+        </div>
+        <div class="score" style="color:${riskColor(x.s.risk)}">${x.s.risk}</div>
+      </div>`;
+    }).join("");
+    document.getElementById("roster-list").innerHTML = html;
+
+    document.querySelectorAll(".roster-row").forEach(row=>{
+      const choose = ()=>{ selectedId = parseInt(row.dataset.id,10); sim = null; renderAll(); };
+      row.addEventListener("click", choose);
+      row.addEventListener("keydown", (ev)=>{ if(ev.key==="Enter"||ev.key===" "){ ev.preventDefault(); choose(); } });
+    });
+  }
+
+  /* ============================================================
+     5. RENDERING — DETAIL PANEL
+  ============================================================ */
+  function slider(key, label, min, max, step, value, suffix){
+    return `<div class="factor">
+      <label>${label} <span class="fval" data-fval="${key}">${value}${suffix||""}</span></label>
+      <input type="range" data-slider="${key}" min="${min}" max="${max}" step="${step}" value="${value}">
+    </div>`;
+  }
+
+  function renderDetail(){
+    const panel = document.getElementById("detail-panel");
+    if(!selectedId && EMPLOYEES.length){ selectedId = EMPLOYEES[0].id; }
+    const emp = EMPLOYEES.find(e=>e.id===selectedId);
+    if(!emp){ panel.innerHTML = "<p>No employees.</p>"; return; }
+
+    const scored = scoreEmployee(emp);
+    const v = currentValues(emp);
+    const color = riskColor(scored.risk);
+    const conic = `conic-gradient(${color} ${scored.risk}%, var(--surface-2) 0)`;
+
+    const contribEntries = Object.entries(scored.contributions).sort((a,b)=>b[1]-a[1]);
+    const maxContrib = Math.max(...contribEntries.map(e=>e[1]), 1);
+    const contribHtml = contribEntries.map(([k,val])=>{
+      const pct = (val/maxContrib)*100;
+      return `<div class="contrib-item">
+        <div class="clabel">${FACTOR_LABELS[k]}</div>
+        <div class="contrib-bar-track"><div class="contrib-bar" style="width:${pct}%;background:${color}"></div></div>
+        <div class="cval">${val.toFixed(1)}</div>
+      </div>`;
+    }).join("");
+
+    const recs = recommendationsFor(emp, scored);
+    const recHtml = recs.length ? recs.map(r=>`
+      <div class="rec-item">
+        <div class="rtitle">${r.title}</div>
+        <div class="rmeta">${r.detail}</div>
+      </div>`).join("") : `<div class="rec-item" style="border-left-color:var(--risk-low)">
+        <div class="rtitle">No urgent action needed</div>
+        <div class="rmeta">This employee's factors are currently within a healthy range.</div>
+      </div>`;
+
+    panel.innerHTML = `
+      <div class="emp-head">
+        <div>
+          <div class="emp-name">${emp.name}</div>
+          <div class="emp-sub">${emp.role} · ${emp.dept} · ${emp.tenureYears} yrs tenure · age ${emp.age} · ${emp.gender}</div>
+        </div>
+        <div class="risk-band" style="background:color-mix(in srgb, ${color} 14%, transparent);color:${color};border:1px solid color-mix(in srgb, ${color} 40%, transparent);">${riskLabel(scored.risk)}</div>
+      </div>
+
+      <div class="gauge-block">
+        <div class="gauge" style="background:${conic}"><div class="val">${scored.risk}</div></div>
+        <div class="gauge-caption">
+          <p>Flight-risk score out of 100, recomputed live from the factors below. Base salary is $${Math.round(v.salary).toLocaleString()}
+          against a role market midpoint of $${emp.roleBand.mid.toLocaleString()} (${scored.compGapPct>=0?'+':''}${Math.round(scored.compGapPct)}%).</p>
+        </div>
+      </div>
+
+      ${sim && sim.id===emp.id ? simBannerHtml(sim) : ""}
+
+      <h3>Adjust factors — see the score respond in real time</h3>
+      <div class="factor-grid">
+        ${slider('salary','Salary ($)', Math.round(emp.roleBand.min*0.8), Math.round(emp.roleBand.max*1.1), 500, Math.round(v.salary), '')}
+        ${slider('wlbScore','Work-life balance', 1, 5, 0.1, v.wlbScore, '/5')}
+        ${slider('managerRel','Manager relationship', 1, 5, 0.1, v.managerRel, '/5')}
+        ${slider('engagement','Engagement', 1, 5, 0.1, v.engagement, '/5')}
+        ${slider('recognition','Recognition', 1, 5, 0.1, v.recognition, '/5')}
+        ${slider('monthsSincePromo','Months since promotion', 0, 60, 1, v.monthsSincePromo, 'mo')}
+        ${slider('overtime','Overtime hrs/week', 0, 26, 0.5, v.overtime, 'h')}
+      </div>
+      <div class="reset-row">
+        <button id="btn-sim" class="primary">Apply recommended actions</button>
+        <button id="btn-reset-emp" class="ghost">Reset to actual data</button>
+      </div>
+
+      <h3>Why this score — factor contributions</h3>
+      <div class="contrib-list">${contribHtml}</div>
+
+      <h3>Recommended retention actions</h3>
+      <div class="rec-list">${recHtml}</div>
+    `;
+
+    // wire sliders
+    panel.querySelectorAll("[data-slider]").forEach(inp=>{
+      inp.addEventListener("input", ()=>{
+        const key = inp.dataset.slider;
+        const val = parseFloat(inp.value);
+        emp.overrides[key] = val;
+        sim = null; const sb = panel.querySelector(".sim-banner"); if(sb) sb.remove();
+        const fval = panel.querySelector(`[data-fval="${key}"]`);
+        if(fval){
+          const suffixMap = {salary:'', wlbScore:'/5', managerRel:'/5', engagement:'/5', recognition:'/5', monthsSincePromo:'mo', overtime:'h'};
+          fval.textContent = (key==='salary' ? Math.round(val).toLocaleString() : val) + suffixMap[key];
+        }
+        renderDetailLite();
+        renderRosterRowOnly(emp);
+        renderROI();
+        renderKPIs();
+      });
+    });
+    document.getElementById("btn-reset-emp").addEventListener("click", ()=>{
+      emp.overrides = {}; sim = null;
+      renderAll();
+    });
+    document.getElementById("btn-sim").addEventListener("click", ()=>{
+      sim = simulate(emp);
+      renderAll();
+    });
+  }
+
+  // lighter re-render used while dragging sliders: only gauge + contributions + recs, no full rebuild (keeps slider focus)
+  function renderDetailLite(){
+    const emp = EMPLOYEES.find(e=>e.id===selectedId);
+    if(!emp) return;
+    const scored = scoreEmployee(emp);
+    const color = riskColor(scored.risk);
+    const conic = `conic-gradient(${color} ${scored.risk}%, var(--surface-2) 0)`;
+    const panel = document.getElementById("detail-panel");
+
+    const gaugeEl = panel.querySelector(".gauge");
+    gaugeEl.style.background = conic;
+    gaugeEl.querySelector(".val").textContent = scored.risk;
+
+    const bandEl = panel.querySelector(".risk-band");
+    bandEl.textContent = riskLabel(scored.risk);
+    bandEl.style.background = "color-mix(in srgb, "+color+" 14%, transparent)"; bandEl.style.color = color; bandEl.style.borderColor = "color-mix(in srgb, "+color+" 40%, transparent)";
+
+    const v = currentValues(emp);
+    panel.querySelector(".gauge-caption p").innerHTML =
+      `Flight-risk score out of 100, recomputed live from the factors below. Base salary is $${Math.round(v.salary).toLocaleString()}
+       against a role market midpoint of $${emp.roleBand.mid.toLocaleString()} (${scored.compGapPct>=0?'+':''}${Math.round(scored.compGapPct)}%).`;
+
+    const contribEntries = Object.entries(scored.contributions).sort((a,b)=>b[1]-a[1]);
+    const maxContrib = Math.max(...contribEntries.map(e=>e[1]), 1);
+    panel.querySelector(".contrib-list").innerHTML = contribEntries.map(([k,val])=>{
+      const pct = (val/maxContrib)*100;
+      return `<div class="contrib-item">
+        <div class="clabel">${FACTOR_LABELS[k]}</div>
+        <div class="contrib-bar-track"><div class="contrib-bar" style="width:${pct}%;background:${color}"></div></div>
+        <div class="cval">${val.toFixed(1)}</div>
+      </div>`;
+    }).join("");
+
+    const recs = recommendationsFor(emp, scored);
+    panel.querySelector(".rec-list").innerHTML = recs.length ? recs.map(r=>`
+      <div class="rec-item">
+        <div class="rtitle">${r.title}</div>
+        <div class="rmeta">${r.detail}</div>
+      </div>`).join("") : `<div class="rec-item" style="border-left-color:var(--risk-low)">
+        <div class="rtitle">No urgent action needed</div>
+        <div class="rmeta">This employee's factors are currently within a healthy range.</div>
+      </div>`;
+  }
+
+  function renderRosterRowOnly(emp){
+    const row = document.querySelector(`.roster-row[data-id="${emp.id}"]`);
+    if(!row) return;
+    const scored = scoreEmployee(emp);
+    const color = riskColor(scored.risk);
+    row.querySelector(".dot").style.background = color;
+    const scoreEl = row.querySelector(".score");
+    scoreEl.textContent = scored.risk;
+    scoreEl.style.color = color;
+  }
+
+
+  /* ============================================================
+     5b. SIMULATION, DEPARTMENT VIEW, GUIDED DEMO
+  ============================================================ */
+  function simulate(emp){
+    const before = scoreEmployee(emp);
+    const v = currentValues(emp), c = before.contributions, o = emp.overrides;
+    if(c.comp > 4)       o.salary = Math.round(Math.max(v.salary, emp.roleBand.mid*(1+Math.max(before.compGapPct,-4)/100))/500)*500;
+    if(c.wlb > 3.5)      o.wlbScore = Math.min(5, Math.round((v.wlbScore+1)*10)/10);
+    if(c.manager > 3.5)  o.managerRel = Math.min(5, Math.round((v.managerRel+1)*10)/10);
+    if(c.promotion > 3.5) o.monthsSincePromo = Math.min(v.monthsSincePromo, 12);
+    if(c.recognition > 3) o.recognition = Math.min(5, Math.round((v.recognition+1)*10)/10);
+    if(c.overtime > 3)   o.overtime = Math.max(5, v.overtime-5);
+    return { id: emp.id, before: before.risk, after: scoreEmployee(emp).risk };
+  }
+  function simBannerHtml(s){
+    const d = s.before - s.after;
+    const note = "<small>Team-level attrition and onboarding stage are not changed by this simulation, and the changes are assumptions, not guarantees.</small>";
+    return d > 0
+      ? `<div class="sim-banner">Simulated result: risk drops from <b>${s.before}</b> to <b>${s.after}</b> (−${d} points) after applying the recommended actions.${note}</div>`
+      : `<div class="sim-banner flat">No recommended action changes this score (${s.before}). The remaining risk comes from factors outside manager control.${note}</div>`;
+  }
+  function renderDept(){
+    const g = {};
+    EMPLOYEES.forEach(e=>{ const r = scoreEmployee(e).risk; (g[e.dept] = g[e.dept] || {sum:0,n:0,high:0}); g[e.dept].sum += r; g[e.dept].n++; if(r>=70) g[e.dept].high++; });
+    const rows = Object.entries(g).map(([k,x])=>({k, avg:x.sum/x.n, high:x.high})).sort((a,b)=>b.avg-a.avg);
+    const max = Math.max(...rows.map(r=>r.avg), 1);
+    document.getElementById("dept-grid").innerHTML = rows.map(r=>`
+      <div class="dept-row" data-dept="${r.k}" tabindex="0" role="button">
+        <div class="dn">${r.k}</div>
+        <div class="bias-track"><div class="bias-fill" style="width:${(r.avg/max)*100}%;background:${riskColor(r.avg)}"></div></div>
+        <div class="dv">${r.avg.toFixed(0)} · ${r.high} high</div>
+      </div>`).join("");
+    document.querySelectorAll(".dept-row").forEach(el=>{
+      const go = ()=>{ searchTerm = el.dataset.dept; document.getElementById("roster-search").value = searchTerm; renderRoster(); };
+      el.addEventListener("click", go);
+      el.addEventListener("keydown", (ev)=>{ if(ev.key==="Enter"||ev.key===" "){ ev.preventDefault(); go(); } });
+    });
+  }
+
+  /* ============================================================
+     6. RENDERING — ROI SIMULATOR
+  ============================================================ */
+  function renderROI(){
+    const emp = EMPLOYEES.find(e=>e.id===selectedId);
+    const block = document.getElementById("roi-block");
+    if(!emp){ block.innerHTML=""; return; }
+    const scored = scoreEmployee(emp);
+    const v = currentValues(emp);
+    const replacementCost = Math.round(v.salary * 1.4);
+    const expectedLossCost = Math.round(replacementCost * (scored.risk/100));
+
+    const recs = recommendationsFor(emp, scored);
+    let interventionCost = 0;
+    if(recs.length){
+      // rough cost model: pay-related rec costs the raise gap; everything else costs a flat management-time estimate
+      recs.forEach(r=>{
+        if(r.title.includes("pay gap")){
+          const targetGap = Math.max(scored.compGapPct, -4);
+          interventionCost += Math.max(Math.round(emp.roleBand.mid*(1+targetGap/100) - v.salary), 0);
+        } else {
+          interventionCost += 1500; // manager time / program cost estimate
+        }
+      });
+    }
+    const payback = interventionCost>0 ? (expectedLossCost/interventionCost) : null;
+
+    block.innerHTML = `
+      <div class="roi-line"><span class="l">Est. replacement cost if this role is vacated</span><span class="v">$${replacementCost.toLocaleString()}</span></div>
+      <div class="roi-line"><span class="l">Risk-weighted expected cost</span><span class="v">$${expectedLossCost.toLocaleString()}</span></div>
+      <div class="roi-line"><span class="l">Est. cost of recommended interventions</span><span class="v">$${interventionCost.toLocaleString()}</span></div>
+      ${payback ? `<div class="roi-verdict ${payback>=1.5?'good':'neutral'}">
+        Intervening now costs roughly <b>${payback.toFixed(1)}×</b> less than the risk-weighted cost of losing this employee.
+      </div>` : `<div class="roi-verdict neutral">No material intervention needed at the current risk level.</div>`}
+    `;
+  }
+
+  /* ============================================================
+     7. RENDERING — BIAS / FAIRNESS AUDIT
+  ============================================================ */
+  function renderBias(){
+    const scored = EMPLOYEES.map(e=>({e, s:scoreEmployee(e)}));
+
+    function groupAvg(keyFn){
+      const groups = {};
+      scored.forEach(x=>{
+        const k = keyFn(x.e);
+        if(!groups[k]) groups[k] = {sumRisk:0, sumGap:0, n:0};
+        groups[k].sumRisk += x.s.risk;
+        groups[k].sumGap += x.s.compGapPct;
+        groups[k].n++;
+      });
+      return groups;
+    }
+
+    function ageBand(e){
+      if(e.age<30) return "Under 30";
+      if(e.age<45) return "30–44";
+      return "45+";
+    }
+
+    const byGender = groupAvg(e=>e.gender);
+    const byAge = groupAvg(ageBand);
+
+    function renderGroup(groups, title){
+      const rows = Object.entries(groups).map(([k,g])=>({
+        k, avgRisk: g.sumRisk/g.n, avgGap: g.sumGap/g.n, n: g.n
+      }));
+      const maxRisk = Math.max(...rows.map(r=>r.avgRisk), 1);
+      const risks = rows.map(r=>r.avgRisk);
+      const spread = Math.max(...risks) - Math.min(...risks);
+      const gaps = rows.map(r=>r.avgGap);
+      const gapSpread = Math.max(...gaps) - Math.min(...gaps);
+
+      const rowsHtml = rows.map(r=>`
+        <div class="bias-row">
+          <div class="glabel">${r.k}</div>
+          <div class="bias-track"><div class="bias-fill" style="width:${(r.avgRisk/maxRisk)*100}%"></div></div>
+          <div class="gval">${r.avgRisk.toFixed(1)}</div>
+        </div>
+      `).join("");
+
+      const flagged = spread > 6 || gapSpread > 3;
+      const flagHtml = flagged
+        ? `<div class="flag alert">Disparity detected: avg. risk score varies by ${spread.toFixed(1)} pts and avg. pay gap by ${gapSpread.toFixed(1)}% across ${title.toLowerCase()} groups. Recommend a compensation and workload equity review.</div>`
+        : `<div class="flag clear">No material disparity detected across ${title.toLowerCase()} groups.</div>`;
+
+      return `<div class="bias-group"><h3 style="margin-top:0">${title}</h3>${rowsHtml}${flagHtml}</div>`;
+    }
+
+    document.getElementById("bias-block").innerHTML =
+      renderGroup(byGender, "By gender") + renderGroup(byAge, "By age band");
+  }
+
+  /* ============================================================
+     8. WIRE-UP
+  ============================================================ */
+  function renderAll(){
+    renderKPIs();
+    renderRoster();
+    renderDetail();
+    renderROI();
+    renderBias();
+    renderDept();
+  }
+
+  document.getElementById("roster-search").addEventListener("input", (e)=>{
+    searchTerm = e.target.value;
+    renderRoster();
+  });
+  document.getElementById("roster-sort-toggle").addEventListener("click", (e)=>{
+    sortDesc = !sortDesc;
+    e.target.textContent = "sort: risk " + (sortDesc ? "↓" : "↑");
+    renderRoster();
+  });
+  document.getElementById("btn-regenerate").addEventListener("click", ()=>{
+    SEED = Math.floor(Math.random()*1e9);
+    rng = mulberry32(SEED);
+    generateWorkforce(340);
+    selectedId = EMPLOYEES[0].id; sim = null;
+    renderAll();
+  });
+  document.getElementById("btn-demo").addEventListener("click", ()=>{
+    searchTerm = ""; document.getElementById("roster-search").value = ""; sortDesc = true;
+    document.getElementById("roster-sort-toggle").textContent = "sort: risk ↓";
+    const top = EMPLOYEES.map(e=>({e, r:scoreEmployee(e).risk})).sort((a,b)=>b.r-a.r)[0].e;
+    top.overrides = {}; selectedId = top.id; sim = null;
+    renderAll();
+    document.getElementById("detail-panel").scrollIntoView({behavior:"smooth", block:"start"});
+  });
+
+  generateWorkforce(340);
+  selectedId = EMPLOYEES[0].id;
+  renderAll();
+
+})();
+</script>
+</body>
+</html>
