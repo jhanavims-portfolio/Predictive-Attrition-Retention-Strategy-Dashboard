@@ -1,194 +1,133 @@
-# 🚀 Predictive Attrition & Retention Strategy Dashboard
+# 🧠 Retention Intelligence
 
-### 📊 Live Simulation Model | 👥 HR Analytics Project
 
----
+## 🎯 The problem
 
-## 🎯 Project Overview
+Most flight-risk tools hand HR a number and nothing else. Nobody can say why someone scored 82, so managers distrust it and employees can't challenge it. Opaque models can also hide pay and demographic gaps.
 
-Employee attrition is a major challenge for organizations, as employee turnover can increase recruitment costs, reduce productivity, and affect organizational performance.
-
-The **Predictive Attrition & Retention Strategy Dashboard** is an interactive **HR Analytics project** designed to identify employees with a higher probability of leaving the organization.
-
-The dashboard analyzes **employee-level attrition risk** and identifies key factors contributing to potential turnover.
-
-💡 It also includes a **live retention strategy simulation**, allowing users to adjust organizational improvement factors and observe their potential impact on attrition risk.
+**This project shows the alternative:** a score that explains itself, answers what-if questions, puts a price on inaction and audits itself for fairness.
 
 ---
 
-## 👥 Dataset Snapshot
+## ⚔️ Black-box tools vs this project
 
-| 📌 Metric | 📊 Details |
-|---|---|
-| 👥 Total Employees | **50** |
-| 🧠 Simulation Type | **Live HR Attrition Simulation** |
-| 🎯 Analysis Level | **Employee-Level** |
-| 🔄 Strategy Simulation | **Interactive** |
-
----
-
-# 🎯 Project Objectives
-
-The project aims to:
-
-🔴 Identify employees with high attrition risk.  
-
-📊 Predict employee-level attrition probability.  
-
-🔍 Identify the primary vulnerability affecting each employee.  
-
-📈 Analyze baseline attrition risk across the workforce.  
-
-🎚️ Simulate retention strategies using interactive controls.  
-
-🔄 Compare baseline and post-strategy attrition risk.  
-
-💡 Support HR decision-making through data-driven insights.  
+| | ❌ Typical black-box tool | ✅ Retention Intelligence |
+|---|---|---|
+| 🔍 **Explainability** | One score, no reasoning | Contribution bar for each of nine drivers |
+| 🎚️ **What-if** | Rerun the model and wait | Seven live sliders, instant update |
+| 🧭 **Next step** | "High risk, good luck" | Top four prioritised actions |
+| 💰 **Business case** | Not included | Replacement cost, expected cost, payback ratio |
+| ⚖️ **Fairness** | An afterthought | Built-in audit by gender and age band |
+| 🔐 **Privacy** | Often uploaded to a vendor | Everything stays in your browser |
 
 ---
 
-# 📈 Dashboard Features
+## ✨ Features
 
-## 👥 Workforce Overview
+### 🔍 Understand the score
+- **Explainable scores:** a 0 to 100 risk score per employee, with a bar showing how many points each driver adds.
+- **Risk bands:** 🟢 Stable (below 40), 🟡 Watch (40 to 69), 🔴 High risk (70 and above).
 
-The dashboard provides a quick overview of key workforce metrics:
+### 🎚️ Test interventions
+- **What-if sliders:** salary, work-life balance, manager relationship, engagement, recognition, months since promotion and overtime. The score recalculates live.
+- **Apply recommended actions:** one click shows a before and after score.
+- **Recommendation engine:** the top four rule-based retention actions for each person.
 
-📌 **Total Workforce**  
+### 💰 Make the business case
+- **Retention ROI:** replacement cost (1.4x salary), risk-weighted cost, intervention cost and payback ratio.
+- **Executive KPIs:** headcount, high-risk count, expected attrition cost and protectable cost.
 
-⚠️ **Baseline Attrition Risk**  
-
-📉 **Simulated Post-Strategy Risk**  
-
-📊 **Turnover Reduction**  
-
----
-
-## 🎚️ Retention Strategy Simulation
-
-Users can adjust four interactive **retention strategy levers**:
-
-💰 **Compensation & Rewards**
-
-📈 **Career & Growth**
-
-👨‍💼 **Manager Quality**
-
-⚖️ **Work Design (Work-Life Balance)**
-
-🔄 The dashboard dynamically recalculates attrition risk based on the selected interventions.
+### ⚖️ Audit and explore
+- **Fairness audit:** compares average risk and pay gap by gender and age band, and flags disparities.
+- **Department view:** average risk and high-risk headcount per department. Click one to filter.
+- **Roster:** searchable, sortable and keyboard accessible, with a 30-second guided tour.
 
 ---
 
-## 📊 Impact Analysis
+## 🧮 How the score works
 
-The dashboard compares:
+A transparent weighted sum. Each of nine drivers is scaled from 0 to 1, multiplied by its weight and added up to a score out of 100.
 
-🔴 **Baseline Attrition Risk**
+| # | Driver | Weight | Share |
+|:-:|---|---:|---|
+| 1 | 💵 Below-market pay | 20% | ████████████████████ |
+| 2 | ⚖️ Work-life balance | 15% | ███████████████ |
+| 3 | 🤝 Manager relationship | 15% | ███████████████ |
+| 4 | 🔥 Engagement | 15% | ███████████████ |
+| 5 | 📈 Time since promotion | 12% | ████████████ |
+| 6 | 👏 Recognition | 10% | ██████████ |
+| 7 | ⏱️ Overtime load | 8% | ████████ |
+| 8 | 👥 Team-level attrition | 8% | ████████ |
+| 9 | 🌱 Onboarding stage | 7% | ███████ |
 
-⬇️ **Simulated Attrition Risk**
+```mermaid
+flowchart LR
+    A[👤 Employee data] --> B[📏 Normalise<br/>each driver 0 to 1]
+    B --> C[➕ Weighted sum<br/>nine drivers]
+    C --> D[🎯 Risk score<br/>0 to 100]
+    D --> E[🧭 Top four<br/>recommendations]
+    E --> F[💰 ROI estimate]
+    D --> G[⚖️ Fairness audit]
+```
 
-📉 **Turnover Reduction**
-
-💡 This helps users understand the potential effectiveness of different retention strategies.
-
----
-
-## 👤 Employee-Level Risk Analysis
-
-Each employee is evaluated using:
-
-🆔 **Employee ID**
-
-💼 **Job Role**
-
-🔍 **Primary Vulnerability**
-
-📊 **Baseline Risk**
-
-📉 **Simulated Risk**
-
-✅ **Retention Status**
-
-📌 Employees are sorted according to their **baseline attrition risk**, helping HR teams prioritize high-risk employees.
+> [!NOTE]
+> A small random residual (between -6 and +6 points) stands in for everything the model cannot see.
 
 ---
 
-# 🔍 Primary Vulnerability Factors
+## ⚡ Try it in 60 seconds
 
-| 🎯 Factor | 📝 Description |
-|---|---|
-| 💰 **Compensation & Rewards** | Employee dissatisfaction related to salary, incentives, or rewards |
-| 📈 **Career & Growth** | Limited career advancement and development opportunities |
-| 👨‍💼 **Manager Quality** | Poor management support, communication, or leadership |
-| ⚖️ **Work Design (WLB)** | Workload imbalance and poor work-life balance |
-
----
-
-# 📊 Dataset Information
-
-## 👥 Dataset Size
-
-📌 **Number of Employees:** 50  
-
-🧠 **Simulation Type:** Live HR Attrition Simulation  
+1. 🔴 Click **Show me the highest-risk employee**.
+2. 🔍 Read the factor bars to see what drives the score.
+3. 🎚️ Drag the **Salary** slider and watch the score and cost change.
+4. ✅ Click **Apply recommended actions** for the before and after.
+5. ⚖️ Scroll to the **Fairness audit** and look at the pay gap flag.
 
 ---
 
-## 🗂️ Key Variables
+## 💻 Run locally
 
-| 📌 Variable | 📝 Description |
-|---|---|
-| 🆔 **Employee ID** | Unique employee identification number |
-| 💼 **Job Role** | Employee's organizational role |
-| 📊 **Baseline Risk** | Initial predicted attrition probability |
-| 🔍 **Primary Vulnerability** | Main factor influencing attrition risk |
-| 📉 **Simulated Risk** | Attrition risk after applying strategies |
-| ✅ **Status** | Employee retention classification |
+1. Download `jhanavi.html` from this repo (open it, then click the download icon).
+2. Double-click the file to open it in any browser. No install needed.
+
+Or serve it with `python -m http.server 8000` and visit `http://localhost:8000`.
 
 ---
 
-# 💼 Job Roles Included
+## 🛡️ Honest limitations
 
-The dataset includes employees from multiple business functions:
+> [!IMPORTANT]
+> This is a design demonstration, not a production model.
 
-📢 **Marketing Analyst**
-
-💻 **Software Engineer**
-
-🤝 **Sales Executive**
-
-👥 **HR Specialist**
-
-💰 **Financial Controller**
-
-⚙️ **Operations Lead**
+- 🧪 **All data is synthetic.** No real company or person is represented.
+- 📐 **The model is rule-based and illustrative.** It is not trained on real data, so scores are not predictions.
+- 🗣️ **A score should start a conversation.** It should never replace human judgment.
+- ⚖️ **A pay gap is built in on purpose** (female salaries x 0.965) so the fairness audit has something real to detect.
 
 ---
 
-# 🧠 Simulation Logic
+## 🚀 What I would build next
 
-The dashboard begins with a **baseline attrition risk** for each employee.
+- [ ] Train on real HRIS data with logistic regression or gradient boosting, explained with **SHAP values**
+- [ ] Add **survival analysis** to estimate when someone might leave
+- [ ] Add **intersectional fairness metrics** and the four-fifths rule
+- [ ] Add PDF and CSV **report export**
 
-Users can then improve organizational retention strategies using the four available levers.
+---
 
-### 🔄 Strategy Impact
+## 🧰 Skills demonstrated
 
-```text
-💰 Improved Compensation
-          ↓
-📉 Reduced Attrition Risk
+`People Analytics` `HR Metrics` `Explainable AI` `Fairness Auditing` `Data Storytelling` `JavaScript` `UX`
 
+---
 
-📈 Improved Career Growth
-          ↓
-📉 Reduced Attrition Risk
+## 👩‍💼 About the author
 
+**M.S. Jhanavi** · MBA (HR), KL Business School
 
-👨‍💼 Improved Manager Quality
-          ↓
-📉 Reduced Attrition Risk
+I build people-analytics projects that show the reasoning behind the numbers. Let's connect.
 
+- 💼 **LinkedIn:** linkedin.com/in/jhanavi-ms-81591233a
+- 📧 **Email:** jhanavimba.hr@gmail.com
 
-⚖️ Improved Work-Life Balance
-          ↓
-📉 Reduced Attrition Risk
+⭐ If you found this useful, a star on the repo is appreciated.
